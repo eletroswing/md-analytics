@@ -1,10 +1,16 @@
 /* eslint-disable @next/next/no-img-element */
+import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 
 export default function Navbar() {
   return (
     <nav className="w-full h- flex p-4 select-none" >
+      <Head>
+        <title>Md Analytics - Easy analytics on markdown!</title>
+        <meta property="og:title" content="Md Analytics - Easy analytics on markdown!" key="title" />
+        <meta property="og:description" content="Collect analytics on your markdown! Fast, easy and helpfull. Widgets includes!" key="title" />
+      </Head>
       <img width={1} height={1} alt="pixel" src="/api/track/ID-UNICO-DE-RASTREAMENTO-DA-PAGINA" />
       <div className="cursor-pointer">
         <Link href={"/"} >
