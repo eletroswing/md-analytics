@@ -82,7 +82,7 @@ function renderer(
               className="flex w-full justify-between px-3 font-sans font-thin mr-4 items-center mt-3"
             >
               <span
-                className={`w-[${percentage}%] rounded-md py-2 pl-3 bg-green-500`}
+                className={`w-[${percentage}%] rounded-md py-2 pl-3 bg-green-500 whitespace-nowrap`}
               >
                 {item.label}
               </span>
