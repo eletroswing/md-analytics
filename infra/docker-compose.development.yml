@@ -1,0 +1,16 @@
+version: '2.4'
+services:
+  postgres_dev:
+    container_name: 'postgres-dev'
+    image: 'postgres:14.1-alpine'
+    environment:
+      POSTGRES_USER: 'local_user'
+      POSTGRES_PASSWORD: 'local_password'
+      POSTGRES_DB: 'track'
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/data/postgres
+    restart: unless-stopped
+volumes:
+  postgres_data:
