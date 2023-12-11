@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import connection from "../../../../../infra/database";
-import geoip from "geoip-lite";
+import geoip from "fast-geoip";
 
 export default async function handler(
   req: NextApiRequest,
@@ -21,7 +21,7 @@ export default async function handler(
 
   const pixel_id = req.query.item;
 
-  const lookup = geoip.lookup(ip == '::1' ? '168.121.42.74': ip);
+  const lookup = await geoip.lookup(ip == '::1' ? '168.121.42.74': ip);
   const country = lookup ? lookup.country : "";
   const state = lookup ? lookup.region : "";
   const neighborhood = lookup ? lookup.city : "";

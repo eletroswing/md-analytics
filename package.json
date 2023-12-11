@@ -17,6 +17,7 @@
     "@headlessui/tailwindcss": "^0.2.0",
     "@heroicons/react": "^1.0.6",
     "@resvg/resvg-js": "^2.6.0",
+    "fast-geoip": "^1.1.88",
     "geoip-lite": "^1.4.9",
     "html-to-react": "^1.7.0",
     "jsdom": "^23.0.1",
