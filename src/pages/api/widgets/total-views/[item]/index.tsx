@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { transformToSvg } from "../../../../../../models/tw-to-css";
 import connection from "../../../../../../infra/database";
+import redis from "../../../../../../infra/redis";
 import { renderAsync } from "@resvg/resvg-js";
 
 export default async function handler(
@@ -58,9 +59,18 @@ CROSS JOIN unique_v;
     growth = 0;
   }
 
-  const svg = await transformToSvg(renderer(total, growth), 300);
+  const cachedSvg = await redis?.get(`total-views-widget:${req.query.item}`);
+  let renderBuffer: any;
 
-  const renderBuffer = await renderAsync(svg);
+  if (cachedSvg) {
+    const svg = await transformToSvg(renderer(total, growth), 300);
+    await redis?.set(`total-views-widget:${req.query.item}`, svg);
+    renderBuffer = await renderAsync(cachedSvg);
+  } else {
+    const svg = await transformToSvg(renderer(total, growth), 300);
+    renderBuffer = await renderAsync(svg);
+    await redis?.set(`total-views-widget:${req.query.item}`, svg);
+  }
 
   res.statusCode = 200;
   res.setHeader("Content-Type", `image/png`);

@@ -2,6 +2,8 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { transformToSvg } from "../../../../../../models/tw-to-css";
 import connection from "../../../../../../infra/database";
+import redis from "../../../../../../infra/redis";
+
 import { renderAsync } from '@resvg/resvg-js';
 
 export default async function handler(
@@ -39,9 +41,18 @@ ORDER BY total DESC;
   
   const dataArray: { label: string; value: number }[] = Array.from(data, ([key, value]) => ({ label: key, value }));
 
-  const svg = await transformToSvg(renderer(dataArray), 600);
+  const cachedSvg = await redis?.get(`analytic-widget:${req.query.item}`);
+  let renderBuffer: any;
 
-  const renderBuffer = await renderAsync(svg);
+  if(cachedSvg) {
+    const svg = await transformToSvg(renderer(dataArray), 600);
+    await redis?.set(`analytic-widget:${req.query.item}`, svg)    
+    renderBuffer = await renderAsync(cachedSvg);
+  }else {
+    const svg = await transformToSvg(renderer(dataArray), 600);
+    renderBuffer = await renderAsync(svg);
+    await redis?.set(`analytic-widget:${req.query.item}`, svg)
+  }
 
   res.statusCode = 200;
   res.setHeader("Content-Type", `image/png`);

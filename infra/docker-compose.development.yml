@@ -1,4 +1,5 @@
-version: '2.4'
+version: '3.8'
+
 services:
   postgres_dev:
     container_name: 'postgres-dev'
@@ -12,5 +13,13 @@ services:
     volumes:
       - postgres_data:/data/postgres
     restart: unless-stopped
+
+  redis_dev:
+    container_name: 'redis-dev'
+    image: 'redis:6.0-alpine'
+    ports:
+      - '6379:6379'
+    restart: unless-stopped
+
 volumes:
   postgres_data:

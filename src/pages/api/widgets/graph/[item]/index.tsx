@@ -1,8 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import connection from "../../../../../../infra/database";
+import redis from "../../../../../../infra/redis";
 import createLineChart from "../../../../../../models/svgChart";
-import { renderAsync } from '@resvg/resvg-js';
+import { renderAsync } from "@resvg/resvg-js";
 
 export default async function handler(
   req: NextApiRequest,
@@ -40,14 +41,25 @@ LIMIT 23;
     return currentPoint;
   }) || [{ time: 0, value: 0 }];
 
-  const svg = createLineChart({
-    data: itemData
-  });
+  const cachedSvg = await redis?.get(`graph-widget:${req.query.item}`);
+  let renderBuffer: any;
 
-  const renderBuffer = await renderAsync(svg);
+  if (cachedSvg) {
+    const svg = createLineChart({
+      data: itemData,
+    });
+    await redis?.set(`graph-widget:${req.query.item}`, svg);
+    renderBuffer = await renderAsync(cachedSvg);
+  } else {
+    const svg = createLineChart({
+      data: itemData,
+    });
+    renderBuffer = await renderAsync(svg);
+    await redis?.set(`graph-widget:${req.query.item}`, svg);
+  }
 
   res.statusCode = 200;
   res.setHeader("Content-Type", `image/png`);
 
-  res.end( renderBuffer.asPng());
+  res.end(renderBuffer.asPng());
 }

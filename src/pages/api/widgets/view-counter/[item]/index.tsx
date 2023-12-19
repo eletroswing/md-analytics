@@ -4,6 +4,7 @@ import satori from 'satori';
 import fs from 'node:fs';
 import { join, resolve } from 'node:path';
 import connection from "../../../../../../infra/database";
+import redis from "../../../../../../infra/redis";
 import { renderAsync } from "@resvg/resvg-js";
 
 export default async function handler(
@@ -17,7 +18,11 @@ export default async function handler(
         FROM tracking
         WHERE pixel_id = $1`, [req.query.item])
 
-  const svg = await satori(renderTemplate(total_unique?.rows[0].unique_views), {
+  const cachedSvg = await redis?.get(`view-counter:${req.query.item}`);
+  let renderBuffer: any;
+
+  if (cachedSvg) {
+     const svg = await satori(renderTemplate(total_unique?.rows[0].unique_views), {
     width: 400,
     height: 29,
     fonts: [
@@ -41,8 +46,36 @@ export default async function handler(
       },
     ]
   });
-
-  const renderBuffer = await renderAsync(svg);
+    await redis?.set(`view-counter:${req.query.item}`, svg);
+    renderBuffer = await renderAsync(cachedSvg);
+  } else {
+     const svg = await satori(renderTemplate(total_unique?.rows[0].unique_views), {
+    width: 400,
+    height: 29,
+    fonts: [
+      {
+        name: 'Roboto',
+        data: fs.readFileSync(join(resolve('.'), 'fonts', 'Roboto-Regular.ttf')),
+        weight: 400,
+        style: 'normal',
+      },
+      {
+        name: 'Roboto',
+        data: fs.readFileSync(join(resolve('.'), 'fonts', 'Roboto-Bold.ttf')),
+        weight: 700,
+        style: 'normal',
+      },
+      {
+        name: 'NotoEmoji',
+        data: fs.readFileSync(join(resolve('.'), 'fonts', 'NotoEmoji-Bold.ttf')),
+        weight: 700,
+        style: 'normal',
+      },
+    ]
+  });
+    renderBuffer = await renderAsync(svg);
+    await redis?.set(`view-counter:${req.query.item}`, svg);
+  }
 
   res.statusCode = 200;
   res.setHeader("Content-Type", `image/png`);
